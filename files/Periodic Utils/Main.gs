@@ -1,3 +1,0 @@
-function main() {
-  GmailUtil.sublabelCleaner();
-}
