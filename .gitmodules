@@ -1,0 +1,3 @@
+[submodule "BatchRequest"]
+	path = BatchRequest
+	url = https://github.com/tanaikech/BatchRequest.git
