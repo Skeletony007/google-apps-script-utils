@@ -1,6 +1,6 @@
 ## Gmail Policy
 
-## Install using [clasp](https://github.com/google/clasp)
+## Install using [clasp](https://github.com/google/clasp) 🔗
 
 ```
 git clone https://github.com/skeletony007/GmailPolicy.git
