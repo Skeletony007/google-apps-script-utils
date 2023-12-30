@@ -8,16 +8,19 @@ class GmailUtil {
    * Constructs a new GmailUtil instance.
    *
    * @constructor
-   * @param {string} [userId='me'] - The user's ID for Gmail.
+   * @param {string} [userId='me']     - The user's ID for Gmail.
    * @param {string} [initialQuery=''] - The initial query for Gmail threads.
    */
   constructor(userId = 'me', initialQuery = '') {
     this.initialQuery = initialQuery;
     this.userId = userId;
 
-    this.setBatchRequest(Gmail.Users.Threads.list(userId, {
+    this.setBatchRequest(this._getRequest({
+      name: 'gmail.users.labels.list',
+      pathParameters: {userId: this.userId}
+    }).concat(Gmail.Users.Threads.list(userId, {
       q: initialQuery,
-      maxResults: 500,  /** todo LIMITED to processing only the 500 most recent emails implement while loop */
+      maxResults: 500, // todo LIMITED to processing only the 500 most recent emails implement while loop
       includeSpamTrash: true
     }).threads.map(thread => this._getRequest({
       name: 'gmail.users.threads.get',
@@ -26,10 +29,7 @@ class GmailUtil {
         id: thread.id
       },
       queryParamaters: {format: 'minimal'}
-    })).concat(this._getRequest({
-      name: 'gmail.users.labels.list',
-      pathParameters: {userId: this.userId}
-    })));  [this.labels, ...this.threads] = this.executeBatchRequest().reverse();
+    }))));  [this.labels, ...this.threads] = this.executeBatchRequest();
   }
 
   _getRequest({name, requestBody, pathParameters, queryParamaters}) {
@@ -56,10 +56,10 @@ class GmailUtil {
           method: 'GET',
           endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}?format=${queryParamaters.format}`
         };
-      case 'gmail.users.threads.delete': /** This operation CANNOT BE UNDONE. Prefer `threads.trash` instead */
+      case 'gmail.users.threads.delete': // This operation CANNOT BE UNDONE. Prefer `threads.trash` instead
         return {
-          //method: 'DELETE',
-          //endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/trash`
+          // method: 'DELETE',
+          // endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/trash`
         };
       case 'gmail.users.threads.modify':
         return {
@@ -91,7 +91,7 @@ class GmailUtil {
    * Reduces redundant requests using `_getRequest()` identifiers
    */
   _compileBatchRequests() {
-    return;  /** todo complete this method */
+    return; // todo complete this method
   }
 
   /**
@@ -175,7 +175,7 @@ class GmailPolicy extends GmailUtil {
     super(userId);
   }
 
-  retention({labelId, retentionDays, methods = [], expectedLabels = []}) {  /** only use 'gmail.users.threads' methods here */
+  retention({labelId, retentionDays, methods = [], expectedLabels = []}) { // only use 'gmail.users.threads' methods here
     const threads = this.getThreadsByRootLabel(labelId);
     const retentionDate = new Date();
           retentionDate.setDate(retentionDate.getDate() - retentionDays);
@@ -329,7 +329,8 @@ class GmailPolicyUI {
     });
   }
 
-  /** todo add support for dynamic label generation using days remaining
-   * - IMPORTANT  should be as a param in the policy {object}
-   */
+  // todo add support for dynamic label generation using days remaining
+  //
+  // - IMPORTANT  should be as a param in the policy {object}
+  //
 }
