@@ -4,6 +4,19 @@ class GmailApi extends GoogleApi {
   }
 }
 
+/**
+ * API request definitions for the Gmail API.
+ * @typedef {Object} ApiRequestDefinitions
+ * @property {function} 'gmail.users.labels.create' - Creates a new label.
+ * @property {function} 'gmail.users.labels.list' - Lists all labels in the user's mailbox.
+ * @property {function} 'gmail.users.labels.patch' - Patch the specified label.
+ * @property {function} 'gmail.users.threads.get' - Gets the specified thread.
+ * @property {function} 'gmail.users.threads.delete' - Immediately and permanently deletes the specified thread. Any messages that belong to the thread are also deleted. This operation cannot be undone. Prefer threads.trash instead.
+ * @property {function} 'gmail.users.threads.modify' - Modifies the labels applied to the thread. This applies to all messages in the thread.
+ * @property {function} 'gmail.users.threads.trash' - Moves the specified thread to the trash. Any messages that belong to the thread are also moved to the trash.
+ *
+ * @type {ApiRequestDefinitions}
+ */
 GmailApi.apiRequest = {
   'gmail.users.labels.create': (pathParameters, requestBody) => ({
     method: 'POST',
