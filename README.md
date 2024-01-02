@@ -9,6 +9,6 @@ git clone https://github.com/skeletony007/GmailPolicy.git
 cd GmailPolicy
 
 clasp create --type standalone
-sed -i '' 's#}#,"filePushOrder":["'"$PWD"'/BatchRequest/BatchRequests.js","'"$PWD"'/GoogleApi.js","'"$PWD"'/GmailApi.js","'"$PWD"'/Policy.js"]}#' .clasp.json
+sed -i '' 's#}#,"filePushOrder":["'"$PWD"'/BatchRequest/BatchRequests.js","'"$PWD"'/GoogleApi.js","'"$PWD"'/GmailApi.js","'"$PWD"'/GmailUtil.js","'"$PWD"'/GmailPolicy.js","'"$PWD"'/GmailPolicyUI.js"]}#' .clasp.json
 clasp push -f
 ```
