@@ -1,5 +1,5 @@
 /**
- * A lazy interface for the Gmail REST API.
+ * A lazy interface for the Gmail RESTful API.
  * 
  * @class
  */
@@ -8,113 +8,27 @@ class GmailUtil {
    * Constructs a new GmailUtil instance.
    *
    * @constructor
-   * @param {string} [userId='me']     - The user's ID for Gmail.
-   * @param {string} [initialQuery=''] - The initial query for Gmail threads.
+   * @param userId {string} - The user's ID for Gmail.
+   * @param initialQuery {string} - The initial query for Gmail threads.
    */
   constructor(userId = 'me', initialQuery = '') {
-    this.initialQuery = initialQuery;
     this.userId = userId;
 
-    this.setBatchRequest(this._getRequest({
-      name: 'gmail.users.labels.list',
-      pathParameters: {userId: this.userId}
-    }).concat(Gmail.Users.Threads.list(userId, {
-      q: initialQuery,
-      maxResults: 500, // todo LIMITED to processing only the 500 most recent emails implement while loop
-      includeSpamTrash: true
-    }).threads.map(thread => this._getRequest({
-      name: 'gmail.users.threads.get',
-      pathParameters: {
-        userId: this.userId,
-        id: thread.id
-      },
-      queryParamaters: {format: 'minimal'}
-    }))));  [this.labels, ...this.threads] = this.executeBatchRequest();
-  }
+    this.GmailApi = new GmailApi('batch/gmail/v1');
 
-  _getRequest({name, requestBody, pathParameters, queryParamaters}) {
-    switch (name) {
-      case 'gmail.users.labels.create':
-        return {
-          method: 'POST',
-          endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/labels`,
-          requestBody: requestBody
-        };
-      case 'gmail.users.labels.list':
-        return {
-          method: 'GET',
-          endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/labels`
-        };
-      case 'gmail.users.labels.patch':
-        return {
-          method: 'PATCH',
-          endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/labels/${pathParameters.id}`,
-          requestBody: requestBody
-        };
-      case `gmail.users.threads.get`:
-        return {
-          method: 'GET',
-          endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}?format=${queryParamaters.format}`
-        };
-      case 'gmail.users.threads.delete': // This operation CANNOT BE UNDONE. Prefer `threads.trash` instead
-        return {
-          // method: 'DELETE',
-          // endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/trash`
-        };
-      case 'gmail.users.threads.modify':
-        return {
-          method: 'POST',
-          endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/modify`,
-          requestBody: requestBody
-        };
-      case 'gmail.users.threads.trash':
-        return {
-          method: 'POST',
-          endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/trash`
-        };
-      default:
-        return null;
-    }
-  }
-
-  getBatchRequest() {
-    return this.batchRequest;
-  }
-
-  setBatchRequest(batchRequest) {
-    this.batchRequest = batchRequest;
-  }
-
-  /**
-   * (NOT IMPLEMENTED) Logical Analysis Stage of Compilation.
-   * 
-   * Reduces redundant requests using `_getRequest()` identifiers
-   */
-  _compileBatchRequests() {
-    return; // todo complete this method
-  }
-
-  /**
-   * Execute the batch API request using Gmail REST API (v1).
-   *
-   * @returns {Object|null} - The response of the batch request.
-   */
-  executeBatchRequest() {
-    this._compileBatchRequests();
-
-    let res;
-    try {
-      res = new BatchRequest({
-        batchPath: 'batch/gmail/v1',
-        requests: this.batchRequest
-      }).EDo();
-    } catch (error) {
-      console.error('Error in executeBatchRequest:', error);
-      return null;
-    }
-
-    this.setBatchRequest([]);
-    return res;
+    this.GmailApi.setBatchRequest([
+      GmailApi.apiRequest['gmail.users.labels.list']({ userId: this.userId })
+    ].concat(
+      Gmail.Users.Threads.list(this.userId, {
+        q: initialQuery,
+        maxResults: 500, // todo LIMITED to processing only the 500 most recent emails implement while loop for date-based fetching
+        includeSpamTrash: true
+      }).threads.map(thread => GmailApi.apiRequest['gmail.users.threads.get'](
+        { userId: this.userId, id: thread.id },
+        { format: 'minimal' }
+      ))
+    ));
+    [this.labels, ...this.threads] = this.GmailApi.executeBatchRequest();
   }
 
   getThreads() {
@@ -175,10 +89,10 @@ class GmailPolicy extends GmailUtil {
     super(userId);
   }
 
-  retention({labelId, retentionDays, methods = [], expectedLabels = []}) { // only use 'gmail.users.threads' methods here
+  retention({ labelId, retentionDays, methods = [], expectedLabels = [] }) { // only use 'gmail.users.threads' methods here
     const threads = this.getThreadsByRootLabel(labelId);
     const retentionDate = new Date();
-          retentionDate.setDate(retentionDate.getDate() - retentionDays);
+    retentionDate.setDate(retentionDate.getDate() - retentionDays);
 
     threads.forEach(thread => {
       const lastMessageDate = new Date(
@@ -191,19 +105,15 @@ class GmailPolicy extends GmailUtil {
         )) {
           Logger.log('exception:unexpected-labels');
         } else {
-          this.setBatchRequest(this.getBatchRequest().concat(...methods.map(
-            method => this._getRequest({
-              name: method.name,
-              requestBody: method.requestBody,
-              pathParameters: {
-                userId: this.userId,
-                id: thread.id
-              }
-            })
-          )))
+          this.GmailApi.setBatchRequest(
+            this.GmailApi.getBatchRequest().concat(...methods.map(method => GmailApi.apiRequest[method.name](
+              { userId: this.userId, id: thread.id },
+              method.requestBody
+            )))
+          )
         }
       }
-    })
+    });
   }
 
   /**
@@ -211,20 +121,16 @@ class GmailPolicy extends GmailUtil {
    * 
    * - Inclusive of the root label
    */
-  patchLabelByRootLabel({labelId, requestBody}) {
+  patchLabelByRootLabel({ labelId, requestBody }) {
     const rootLabelName = this.getLabelName(labelId);
-    this.setBatchRequest(this.getBatchRequest()
+    this.GmailApi.setBatchRequest(this.GmailApi.getBatchRequest()
       .concat(...this.getLabels().labels
         .filter(label =>
           label.name === rootLabelName || label.name.startsWith(`${rootLabelName}/`)
-        ).map(label => this._getRequest({
-          name: 'gmail.users.labels.patch',
-          requestBody: requestBody,
-          pathParameters: {
-            userId: this.userId,
-            id: label.id
-          }
-        }))
+        ).map(label => GmailApi.apiRequest['gmail.users.labels.patch'](
+          { userId: this.userId, id: label.id },
+          requestBody
+        ))
       )
     );
   }
@@ -250,7 +156,7 @@ class GmailPolicyUI {
     this.GmailPolicy = new GmailPolicy(this.userId);
   }
 
-  _getMethod({name, requestBody, pathParameters, queryParameters}) {
+  _getMethod({ name, requestBody, pathParameters, queryParameters }) {
     switch (name) {
       case 'modify':
         return {
@@ -259,16 +165,15 @@ class GmailPolicyUI {
             "addLabelIds": requestBody.addLabelNames.map(labelName => {
               let labelId = this.GmailPolicy.getLabelId(labelName);
               if (!labelId) {
-                this.GmailPolicy.setBatchRequest(
-                  this.GmailPolicy.getBatchRequest().concat(
-                    this.GmailPolicy._getRequest({
-                      name: 'gmail.users.labels.create',
-                      requestBody: { name: labelName },
-                      pathParameters: { userId: this.GmailPolicy.userId },
-                    })
+                this.GmailPolicy.GmailApi.setBatchRequest(
+                  this.GmailPolicy.GmailApi.getBatchRequest().concat(
+                    GmailApi.apiRequest['gmail.users.labels.create'](
+                      { userId: this.GmailPolicy.userId },
+                      { name: labelName }
+                    )
                   )
                 );
-                const label = this.GmailPolicy.executeBatchRequest().pop();
+                const label = this.GmailPolicy.GmailApi.executeBatchRequest().pop();
                 this.GmailPolicy.setLabels({
                   labels: this.GmailPolicy.getLabels().labels.concat(label)
                 });
@@ -302,7 +207,7 @@ class GmailPolicyUI {
    * @returns {Object} - The response of the batch request.
    */
   executeBatchRequest() {
-    return this.GmailPolicy.executeBatchRequest();
+    return this.GmailPolicy.GmailApi.executeBatchRequest();
   }
 
   /**
@@ -313,16 +218,16 @@ class GmailPolicyUI {
    * @param {number} policy.retentionDays - The number of days to retain threads.
    * @param {Array} [policy.methods=[]] - An array of methods to apply to threads.
    */
-  retention({labelName, retentionDays, methods = [], expectedLabels = []}) {
+  retention({ labelName, retentionDays, methods = [], expectedLabels = [] }) {
     this.GmailPolicy.retention({
       labelId: this.GmailPolicy.getLabelId(labelName),
       retentionDays: retentionDays,
       methods: methods.map(uiMethod => this._getMethod(uiMethod)),
       expectedLabels: expectedLabels.map(labelName => this.GmailPolicy.getLabelId(labelName))
-    }); /** todo  move modify labels features to GmailPolicy._getRequest() */
+    }); /** todo  move modify labels features to GmailPolicy.apiMethod() */
   }
 
-  patchLabelByRootLabel({labelName, requestBody}) {
+  patchLabelByRootLabel({ labelName, requestBody }) {
     this.GmailPolicy.patchLabelByRootLabel({
       labelId: this.GmailPolicy.getLabelId(labelName),
       requestBody: requestBody
