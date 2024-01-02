@@ -30,16 +30,14 @@ class GoogleApi {
    * Execute the batch API request using Gmail REST API (v1).
    *
    * @returns {Object|null} - The response of the batch request.
+   * @see { @link https://developers.google.com/apps-script/guides/support/best-practices#avoid_libraries_in_ui-heavy_scripts }
    */
   executeBatchRequest() {
     this.compileBatchRequests();
 
     let res;
     try {
-      res = new BatchRequest({
-        batchPath: this.batchPath,
-        requests: this.batchRequest
-      }).EDo();
+      res = EDo({ batchPath: this.batchPath, requests: this.batchRequest });
     } catch (error) {
       console.error('Error in executeBatchRequest:', error);
       return null;
