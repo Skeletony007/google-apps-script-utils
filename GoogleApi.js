@@ -46,4 +46,19 @@ class GoogleApi {
     this.setBatchRequest([]);
     return res;
   }
+
+  static addQueryParameters(endpoint, queryParameters) {
+    const queryString = Object.entries(queryParameters)
+      .filter(([key, value]) => value !== undefined)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return value.map(val => `${key}=${encodeURIComponent(val)}`).join('&');
+        } else {
+          return `${key}=${encodeURIComponent(value)}`;
+        }
+      })
+      .join('&');
+
+    return `${endpoint}?${queryString}`;
+  }
 }

@@ -34,11 +34,11 @@ GmailApi.apiRequest = {
   }),
   'users.threads.get': (pathParameters, queryParameters) => ({
     method: 'GET',
-    endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}?format=${queryParameters.format}`
+    endpoint: GoogleApi.addQueryParameters(`https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}`, queryParameters)
   }),
   'users.threads.list': (pathParameters, queryParameters) => ({
     method: 'GET',
-    endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads?maxResults=${queryParameters.maxResults}&pageToken=${queryParameters.pageToken}&q=${queryParameters.q}&labelIds=${queryParameters.labelIds}&includeSpamTrash=${queryParameters.includeSpamTrash}`
+    endpoint: GoogleApi.addQueryParameters(`https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads`, queryParameters)
   }),
   'users.threads.delete': pathParameters => ({
     method: 'DELETE',
