@@ -22,14 +22,14 @@ class GmailPolicyUI {
     switch (name) {
       case 'modify':
         return {
-          name: 'gmail.users.threads.modify',
+          name: 'users.threads.modify',
           requestBody: {
             "addLabelIds": requestBody.addLabelNames.map(labelName => {
               let labelId = this.GmailPolicy.getLabelId(labelName);
               if (!labelId) {
                 this.GmailPolicy.GmailApi.setBatchRequest(
                   this.GmailPolicy.GmailApi.getBatchRequest().concat(
-                    GmailApi.apiRequest['gmail.users.labels.create'](
+                    GmailApi.apiRequest['users.labels.create'](
                       { userId: this.GmailPolicy.userId },
                       { name: labelName }
                     )
@@ -52,11 +52,11 @@ class GmailPolicyUI {
         };
       case 'delete':
         return {
-          name: 'gmail.users.threads.delete'
+          name: 'users.threads.delete'
         };
       case 'trash':
         return {
-          name: 'gmail.users.threads.trash'
+          name: 'users.threads.trash'
         };
       default:
         return null;

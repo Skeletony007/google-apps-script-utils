@@ -8,7 +8,7 @@ class GmailPolicy extends GmailUtil {
     super(userId);
   }
 
-  retention({ labelId, retentionDays, methods = [], expectedLabels = [] }) { // only use 'gmail.users.threads' methods here
+  retention({ labelId, retentionDays, methods = [], expectedLabels = [] }) { // only use 'users.threads' methods here
     const threads = this.getThreadsByRootLabel(labelId);
     const retentionDate = new Date();
     retentionDate.setDate(retentionDate.getDate() - retentionDays);
@@ -42,7 +42,7 @@ class GmailPolicy extends GmailUtil {
       .concat(...this.getLabels().labels
         .filter(label =>
           label.name === rootLabelName || label.name.startsWith(`${rootLabelName}/`)
-        ).map(label => GmailApi.apiRequest['gmail.users.labels.patch'](
+        ).map(label => GmailApi.apiRequest['users.labels.patch'](
           { userId: this.userId, id: label.id },
           requestBody
         ))

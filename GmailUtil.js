@@ -16,18 +16,20 @@ class GmailUtil {
 
     this.GmailApi = new GmailApi('batch/gmail/v1');
 
-    this.GmailApi.setBatchRequest([
-      GmailApi.apiRequest['gmail.users.labels.list']({ userId: this.userId })
-    ].concat(
-      Gmail.Users.Threads.list(this.userId, {
-        q: initialQuery,
-        maxResults: 500, // todo LIMITED to processing only the 500 most recent emails implement while loop for date-based fetching
-        includeSpamTrash: true
-      }).threads.map(thread => GmailApi.apiRequest['gmail.users.threads.get'](
-        { userId: this.userId, id: thread.id },
-        { format: 'minimal' }
-      ))
-    ));
+    // todo LIMITED to processing only the 500 most recent emails implement while loop for date-based fetching
+    this.GmailApi.setBatchRequest(
+      [GmailApi.apiRequest['users.labels.list']({ userId: this.userId })]
+        .concat(
+          Gmail.Users.Threads.list(this.userId, {
+            q: initialQuery,
+            maxResults: 500,
+            includeSpamTrash: true
+          }).threads.map(thread => GmailApi.apiRequest['users.threads.get'](
+            { userId: this.userId, id: thread.id },
+            { format: 'minimal' }
+          ))
+        )
+    );
     [this.labels, ...this.threads] = this.GmailApi.executeBatchRequest();
   }
 
