@@ -18,17 +18,22 @@ class GmailUtil {
 
     // todo LIMITED to processing only the 500 most recent emails implement while loop for date-based fetching
     this.GmailApi.setBatchRequest(
-      [GmailApi.apiRequest['users.labels.list']({ userId: this.userId })]
-        .concat(
-          Gmail.Users.Threads.list(this.userId, {
-            q: initialQuery,
-            maxResults: 500,
-            includeSpamTrash: true
-          }).threads.map(thread => GmailApi.apiRequest['users.threads.get'](
-            { userId: this.userId, id: thread.id },
-            { format: 'minimal' }
-          ))
-        )
+      [GmailApi.apiRequest['users.labels.list'](
+        { userId: this.userId }
+      )].concat(
+        (() => {
+          this.GmailApi.setBatchRequest([
+            GmailApi.apiRequest['users.threads.list'](
+              { userId: this.userId },
+              { maxResults: 500, q: initialQuery, includeSpamTrash: true }
+            )
+          ]);
+          return this.GmailApi.executeBatchRequest()[0];
+        })().threads.map(thread => GmailApi.apiRequest['users.threads.get'](
+          { userId: this.userId, id: thread.id },
+          { format: 'minimal' }
+        ))
+      )
     );
     [this.labels, ...this.threads] = this.GmailApi.executeBatchRequest();
   }
