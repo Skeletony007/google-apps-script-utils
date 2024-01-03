@@ -11,25 +11,32 @@ class GmailUtil {
    * @param userId {string} - The user's ID for Gmail.
    * @param initialQuery {string} - The initial query for Gmail threads.
    */
-  constructor(userId = 'me', initialQuery = '') {
+  constructor({ userId = 'me', initialQuery = '' }) {
     this.userId = userId;
+    this.initialQuery = initialQuery;
 
-    this.GmailApi = new GmailApi('batch/gmail/v1');
+    this.GmailApi = new GmailApi();
 
-    // todo LIMITED to processing only the 500 most recent emails implement while loop for date-based fetching
     this.GmailApi.setBatchRequest(
       [GmailApi.apiRequest['users.labels.list'](
         { userId: this.userId }
       )].concat(
         (() => {
-          this.GmailApi.setBatchRequest([
-            GmailApi.apiRequest['users.threads.list'](
-              { userId: this.userId },
-              { maxResults: 500, q: initialQuery, includeSpamTrash: true }
-            )
-          ]);
-          return this.GmailApi.executeBatchRequest()[0];
-        })().threads.map(thread => GmailApi.apiRequest['users.threads.get'](
+          var threads = [];
+          var nextPageToken;
+          do {
+            this.GmailApi.setBatchRequest([
+              GmailApi.apiRequest['users.threads.list'](
+                { userId: this.userId },
+                { maxResults: 500, pageToken: nextPageToken, q: this.initialQuery, includeSpamTrash: true }
+              )
+            ]);
+            const res = this.GmailApi.executeBatchRequest()[0];
+            threads = threads.concat(res.threads);
+            nextPageToken = res.nextPageToken;
+          } while (nextPageToken);
+          return threads.filter(thread => thread !== undefined);
+        })().map(thread => GmailApi.apiRequest['users.threads.get'](
           { userId: this.userId, id: thread.id },
           { format: 'minimal' }
         ))
