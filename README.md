@@ -1,9 +1,5 @@
-<h1 align="center"> Gmail Policy </h1>
-<div align="center">
-  <a href="https://github.com/google/clasp">
-    <img src="https://img.shields.io/badge/built%20with-clasp-4285f4.svg" alt="clasp">
-  </a>
-</div>
+<h1 align="center"> Unofficial Gmail Policy </h1>
+<a href="https://github.com/google/clasp"><img src="https://img.shields.io/badge/built%20with-clasp-4285f4.svg" alt="clasp"></a>
 
 ### Features
 
@@ -13,7 +9,7 @@
 ### Install using [clasp](https://github.com/google/clasp) 🔗
 
 ```
-git clone https://github.com/skeletony007/GmailPolicy.git
+git clone https://github.com/skeletony007/UnofficialGmailPolicy.git
 cd GmailPolicy
 
 clasp create --type standalone
@@ -21,6 +17,9 @@ sed -i '' 's#}#,"filePushOrder":["'"$PWD"'/BatchRequest/BatchRequests.js","'"$PW
 clasp push -f
 ```
 
+### Configure using [Apps Script](https://developers.google.com/apps-script/) online 📜
+
+Place the `Config.gs` as the final file in the [execution order](https://github.com/google/clasp/issues/72).
 
 ### Q&A
 
