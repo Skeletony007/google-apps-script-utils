@@ -1,8 +1,16 @@
-[![clasp](https://img.shields.io/badge/built%20with-clasp-4285f4.svg)](https://github.com/google/clasp)
+<h1 align="center"> Gmail Policy </h1>
+<div align="center">
+  <a href="https://github.com/google/clasp">
+    <img src="https://img.shields.io/badge/built%20with-clasp-4285f4.svg" alt="clasp">
+  </a>
+</div>
 
-## Gmail Policy
+### Features
 
-## Install using [clasp](https://github.com/google/clasp) 🔗
+- Outlook-like [retention policies](https://support.microsoft.com/en-us/office/retention-and-archive-policies-in-outlook-web-app-465372e4-e16b-47db-bee0-aba44799085e) for Gmail
+- [Trigger](https://developers.google.com/apps-script/guides/triggers) jobs for [threads](https://developers.google.com/gmail/api/reference/rest/v1/users.threads), [messages](https://developers.google.com/gmail/api/reference/rest/v1/users.messages), and [labels](https://developers.google.com/gmail/api/reference/rest/v1/users.labels)
+
+### Install using [clasp](https://github.com/google/clasp) 🔗
 
 ```
 git clone https://github.com/skeletony007/GmailPolicy.git
@@ -14,7 +22,7 @@ clasp push -f
 ```
 
 
-## Q&A
+### Q&A
 
 **Q: Why use [tanaikech/BatchRequest](https://github.com/tanaikech/BatchRequest) over [Google JavaScript client library batching](https://github.com/google/google-api-javascript-client/blob/master/docs/batch.md)?**
 
@@ -22,6 +30,4 @@ A: The Google Apps Script compiler does not seem to support the [setup](https://
 
 **Q: Why map `users.threads.get` over `users.threads.list`?**
 
-A: `users.threads.get` does not return `message.internalDate`,
-`users.threads.get` does. See [message
-resource](https://developers.google.com/gmail/api/reference/rest/v1/users.messages#resource:-message)
+A: `users.threads.get` does not return `message.internalDate`, `users.threads.get` does. See [message resource](https://developers.google.com/gmail/api/reference/rest/v1/users.messages#resource:-message)
