@@ -1,4 +1,5 @@
-# google-apps-script-utils
+# (unofficial) google-apps-script-utils
+
 General Google Apps Script utilities
 
 [https://script.google.com](https://script.google.com)
