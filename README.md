@@ -4,7 +4,7 @@
 ### Features
 
 - Outlook-like [retention policies](https://support.microsoft.com/en-us/office/retention-and-archive-policies-in-outlook-web-app-465372e4-e16b-47db-bee0-aba44799085e) for Gmail
-- [Trigger](https://developers.google.com/apps-script/guides/triggers) jobs for [threads](https://developers.google.com/gmail/api/reference/rest/v1/users.threads), [messages](https://developers.google.com/gmail/api/reference/rest/v1/users.messages), and [labels](https://developers.google.com/gmail/api/reference/rest/v1/users.labels)
+- [Trigger](https://developers.google.com/apps-script/guides/triggers) Google API jobs for [threads](https://developers.google.com/gmail/api/reference/rest/v1/users.threads), [messages](https://developers.google.com/gmail/api/reference/rest/v1/users.messages), and [labels](https://developers.google.com/gmail/api/reference/rest/v1/users.labels)
 
 ### Install using [clasp](https://github.com/google/clasp) 🔗
 
@@ -19,7 +19,7 @@ clasp push -f
 
 ### Configure using [Apps Script](https://developers.google.com/apps-script/) online 📜
 
-Place the `Config.gs` as the final file in the [execution order](https://github.com/google/clasp/issues/72).
+Place the `Config.gs` as the final [execution order](https://github.com/google/clasp/issues/72) file.
 
 ### Q&A
 
