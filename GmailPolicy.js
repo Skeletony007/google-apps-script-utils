@@ -9,26 +9,21 @@ class GmailPolicy extends GmailUtil {
   }
 
   retention({ labelId, retentionDays, methods = [], expectedLabels = [] }) { // only use 'users.threads' methods here
-    const threads = this.getThreadsByRootLabel(labelId);
     const retentionDate = new Date();
     retentionDate.setDate(retentionDate.getDate() - retentionDays);
-
-    threads.forEach(thread => {
-      const lastMessageDate = new Date(parseInt(thread.messages[thread.messages.length - 1].internalDate));
-
-      if (lastMessageDate < retentionDate) {
-        if (thread.messages.some(message => message.labelIds.some(labelId => !expectedLabels.includes(labelId)))) {
-          console.log('exception:unexpected-labels');
-        } else {
-          this.GmailApi.setBatchRequest(
-            this.GmailApi.getBatchRequest().concat(...methods.map(method => GmailApi.apiRequest[method.name](
-              { userId: this.userId, id: thread.id },
-              method.requestBody
-            )))
-          )
-        }
-      }
-    });
+    this.GmailApi.setBatchRequest(
+      this.getThreadsByRootLabel(labelId)
+        .filter(thread =>
+          new Date(parseInt(thread.messages[thread.messages.length - 1].internalDate)) < retentionDate
+          && thread.messages.every(message => message.labelIds.every(labelId => expectedLabels.includes(labelId)))
+        )
+        .flatMap(thread =>
+          methods.map(method => GmailApi.apiRequest[method.name](
+            { userId: this.userId, id: thread.id },
+            method.requestBody
+          ))
+        )
+    );
   }
 
   /**
