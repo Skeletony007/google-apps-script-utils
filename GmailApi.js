@@ -18,38 +18,38 @@ class GmailApi extends GoogleApi {
  * @type {ApiRequestDefinitions}
  */
 GmailApi.apiRequest = {
-  'users.labels.create': (pathParameters, requestBody) => ({
+  'users.labels.create': ({ pathParameters, requestBody }) => ({
     method: 'POST',
     endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/labels`,
     requestBody: requestBody
   }),
-  'users.labels.list': pathParameters => ({
+  'users.labels.list': ({ pathParameters }) => ({
     method: 'GET',
     endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/labels`
   }),
-  'users.labels.patch': (pathParameters, requestBody) => ({
+  'users.labels.patch': ({ pathParameters, requestBody }) => ({
     method: 'PATCH',
     endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/labels/${pathParameters.id}`,
     requestBody: requestBody
   }),
-  'users.threads.get': (pathParameters, queryParameters) => ({
+  'users.threads.get': ({ pathParameters, queryParameters }) => ({
     method: 'GET',
     endpoint: GoogleApi.addQueryParameters(`https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}`, queryParameters)
   }),
-  'users.threads.list': (pathParameters, queryParameters) => ({
+  'users.threads.list': ({ pathParameters, queryParameters }) => ({
     method: 'GET',
     endpoint: GoogleApi.addQueryParameters(`https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads`, queryParameters)
   }),
-  'users.threads.delete': pathParameters => ({
+  'users.threads.delete': ({ pathParameters }) => ({
     method: 'DELETE',
     endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/trash`
   }),
-  'users.threads.modify': (pathParameters, requestBody) => ({
+  'users.threads.modify': ({ pathParameters, requestBody }) => ({
     method: 'POST',
     endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/modify`,
     requestBody: requestBody
   }),
-  'users.threads.trash': pathParameters => ({
+  'users.threads.trash': ({ pathParameters }) => ({
     method: 'POST',
     endpoint: `https://gmail.googleapis.com/gmail/v1/users/${pathParameters.userId}/threads/${pathParameters.id}/trash`
   }),

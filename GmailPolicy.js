@@ -8,7 +8,7 @@ class GmailPolicy extends GmailUtil {
     super(userId);
   }
 
-  retention({ labelId, retentionDays, methods = [], expectedLabels = [] }) { // only use 'users.threads' methods here
+  retention({ labelId, retentionDays, methods = [], expectedLabels = [] }) {
     const retentionDate = new Date();
     retentionDate.setDate(retentionDate.getDate() - retentionDays);
     this.GmailApi.setBatchRequest(
@@ -19,8 +19,7 @@ class GmailPolicy extends GmailUtil {
         )
         .flatMap(thread =>
           methods.map(method => GmailApi.apiRequest[method.name](
-            { userId: this.userId, id: thread.id },
-            method.requestBody
+            Object.assign(method.parameters, { pathParameters: {userId: this.userId, id: thread.id} })
           ))
         )
     );

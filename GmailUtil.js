@@ -18,27 +18,27 @@ class GmailUtil {
     this.GmailApi = new GmailApi();
 
     this.GmailApi.setBatchRequest(
-      [GmailApi.apiRequest['users.labels.list'](
-        { userId: this.userId }
-      )].concat(
+      [GmailApi.apiRequest['users.labels.list']({
+        pathParameters: { userId: this.userId }
+      })].concat(
         (() => {
           var threads = [];
           var nextPageToken;
           do {
             this.GmailApi.setBatchRequest([
-              GmailApi.apiRequest['users.threads.list'](
-                { userId: this.userId },
-                { maxResults: 500, pageToken: nextPageToken, q: this.initialQuery, includeSpamTrash: true }
-              )
+              GmailApi.apiRequest['users.threads.list']({
+                pathParameters: { userId: this.userId },
+                queryParameters: { maxResults: 500, pageToken: nextPageToken, q: this.initialQuery, includeSpamTrash: true }
+              })
             ]);
             const res = this.GmailApi.executeBatchRequest()[0];
             threads = threads.concat(res.threads);
             nextPageToken = res.nextPageToken;
           } while (nextPageToken);
           return threads.filter(thread => thread !== undefined);
-        })().map(thread => GmailApi.apiRequest['users.threads.get'](
-          { userId: this.userId, id: thread.id },
-          { format: 'minimal' }
+        })().map(thread => GmailApi.apiRequest['users.threads.get']({
+          pathParameters: { userId: this.userId, id: thread.id },
+          queryParameters: { format: 'minimal' } }
         ))
       )
     );

@@ -18,36 +18,38 @@ class GmailPolicyUI {
     this.GmailPolicy = new GmailPolicy(this.userId);
   }
 
-  _getMethod({ name, requestBody, pathParameters, queryParameters }) {
+  _getMethod({ name, parameters }) {
     switch (name) {
       case 'modify':
         return {
           name: 'users.threads.modify',
-          requestBody: {
-            "addLabelIds": requestBody.addLabelNames.map(labelName => {
-              let labelId = this.GmailPolicy.getLabelId(labelName);
-              if (!labelId) {
-                this.GmailPolicy.GmailApi.setBatchRequest(
-                  this.GmailPolicy.GmailApi.getBatchRequest().concat(
-                    GmailApi.apiRequest['users.labels.create'](
-                      { userId: this.GmailPolicy.userId },
-                      { name: labelName }
+          parameters: {
+            requestBody: {
+              "addLabelIds": parameters.requestBody.addLabelNames.map(labelName => {
+                let labelId = this.GmailPolicy.getLabelId(labelName);
+                if (!labelId) {
+                  this.GmailPolicy.GmailApi.setBatchRequest(
+                    this.GmailPolicy.GmailApi.getBatchRequest().concat(
+                      GmailApi.apiRequest['users.labels.create'](
+                        { userId: this.GmailPolicy.userId },
+                        { name: labelName }
+                      )
                     )
-                  )
-                );
-                const label = this.GmailPolicy.GmailApi.executeBatchRequest().pop();
-                this.GmailPolicy.setLabels({
-                  labels: this.GmailPolicy.getLabels().labels.concat(label)
-                });
+                  );
+                  const label = this.GmailPolicy.GmailApi.executeBatchRequest().pop();
+                  this.GmailPolicy.setLabels({
+                    labels: this.GmailPolicy.getLabels().labels.concat(label)
+                  });
 
-                labelId = label.id;
-              }
+                  labelId = label.id;
+                }
 
-              return labelId;
-            }).filter(item => item !== null),
-            "removeLabelIds": requestBody.removeLabelNames.map(labelName =>
-              this.GmailPolicy.getLabelId(labelName)
-            ).filter(item => item !== null)
+                return labelId;
+              }).filter(item => item !== null),
+              "removeLabelIds": parameters.requestBody.removeLabelNames.map(labelName =>
+                this.GmailPolicy.getLabelId(labelName)
+              ).filter(item => item !== null)
+            }
           }
         };
       case 'delete':
