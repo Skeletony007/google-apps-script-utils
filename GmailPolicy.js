@@ -8,20 +8,29 @@ class GmailPolicy extends GmailUtil {
     super(userId);
   }
 
-  retention({ labelId, retentionDays, methods = [], expectedLabels = [] }) {
+  retention({ labelId, retentionDays, methods = [], unexpectedLabelIds = null, expectedLabelIds = null }) {
     const retentionDate = new Date();
     retentionDate.setDate(retentionDate.getDate() - retentionDays);
     this.GmailApi.setBatchRequest(
       this.getThreadsByRootLabel(labelId)
         .filter(thread =>
-          new Date(parseInt(thread.messages[thread.messages.length - 1].internalDate)) < retentionDate
-          && thread.messages.every(message => message.labelIds.every(labelId => expectedLabels.includes(labelId)))
+          new Date(parseInt(thread.messages.pop().internalDate)) < retentionDate &&
+          (unexpectedLabelIds
+            ? !thread.messages.some(message => message.labelIds.some(labelId => unexpectedLabelIds.includes(labelId)))
+            : true
+          ) &&
+          (expectedLabelIds
+            ? thread.messages.every(message => message.labelIds.every(labelId => expectedLabelIds.includes(labelId)))
+            : true
+          )
         )
-        .flatMap(thread =>
-          methods.map(method => GmailApi.apiRequest[method.name](
-            Object.assign(method.parameters, { pathParameters: {userId: this.userId, id: thread.id} })
-          ))
-        )
+        .flatMap(thread => methods.map(method => GmailApi.getRequest({
+          ...method,
+          parameters: {
+            ...method.parameters,
+            pathParameters: { userId: this.userId, id: thread.id }
+          }
+        })))
     );
   }
 
@@ -36,10 +45,13 @@ class GmailPolicy extends GmailUtil {
       .concat(...this.getLabels().labels
         .filter(label =>
           label.name === rootLabelName || label.name.startsWith(`${rootLabelName}/`)
-        ).map(label => GmailApi.apiRequest['users.labels.patch'](
-          { userId: this.userId, id: label.id },
-          requestBody
-        ))
+        ).map(label => GmailApi.getRequest({
+          name: 'users.labels.patch',
+          parameters: {
+            pathParameters: { userId: this.userId, id: label.id },
+            requestBody: requestBody
+          }
+        }))
       )
     );
   }

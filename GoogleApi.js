@@ -47,18 +47,24 @@ class GoogleApi {
     return res;
   }
 
-  static addQueryParameters(endpoint, queryParameters) {
-    const queryString = Object.entries(queryParameters)
-      .filter(([key, value]) => value !== undefined)
-      .map(([key, value]) => {
-        if (Array.isArray(value)) {
-          return value.map(val => `${key}=${encodeURIComponent(val)}`).join('&');
-        } else {
-          return `${key}=${encodeURIComponent(value)}`;
-        }
-      })
-      .join('&');
+  static getRequest({ name, parameters }) {
+    const requestTemplate = this.requestTemplates[name](parameters);
+    const queryString = parameters.queryParameters
+      ? Object.entries(parameters.queryParameters)
+        .map(([key, value]) => {
+          if (Array.isArray(value)) {
+            return value.map(val => `${key}=${encodeURIComponent(val)}`).join('&');
+          } else {
+            return `${key}=${encodeURIComponent(value)}`;
+          }
+        })
+        .join('&')
+      : null;
 
-    return `${endpoint}?${queryString}`;
+    return {
+      ...requestTemplate,
+      endpoint: `${requestTemplate.endpoint}${queryString ? `?${queryString}` : ''}`,
+      ...parameters
+    };
   }
 }

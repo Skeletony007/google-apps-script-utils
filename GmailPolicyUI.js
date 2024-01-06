@@ -14,54 +14,60 @@ class GmailPolicyUI {
    * @param {string} [userId='me'] - The user's ID for Gmail.
    */
   constructor(userId = 'me') {
-    this.userId = userId;
-    this.GmailPolicy = new GmailPolicy(this.userId);
+    this.GmailPolicy = new GmailPolicy(userId);
   }
 
-  _getMethod({ name, parameters }) {
-    switch (name) {
-      case 'modify':
+  /**
+   * Adds non-functional SIDE EFFECTS to methods
+   *
+   */
+  DoMethod(method) {
+    switch (method.name) {
+      case 'users.threads.modify':
+        method.parameters.requestBody.addLabelNames
+          .filter(labelName => !this.GmailPolicy.getLabelId(labelName))
+          .forEach(labelName => {
+            this.GmailPolicy.GmailApi.setBatchRequest([
+              ...this.GmailPolicy.GmailApi.getBatchRequest(),
+              GmailApi.getRequest({
+                name: 'users.labels.create',
+                parameters: {
+                  pathParameters: { userId: this.GmailPolicy.userId },
+                  requestBody: { name: labelName }
+                }
+              })
+            ]);
+
+            // dupicate THIS function IN `compileBatchRequest()`
+            //  -- *this* is required for addLabelIds.
+            this.GmailPolicy.setLabels({
+              ...this.GmailPolicy.getLabels(),
+              labels: this.GmailPolicy.getLabels().labels.concat(
+                this.GmailPolicy.GmailApi.executeBatchRequest().pop()
+              )
+            });
+          });
         return {
-          name: 'users.threads.modify',
+          ...method,
           parameters: {
             requestBody: {
-              "addLabelIds": parameters.requestBody.addLabelNames.map(labelName => {
-                let labelId = this.GmailPolicy.getLabelId(labelName);
-                if (!labelId) {
-                  this.GmailPolicy.GmailApi.setBatchRequest(
-                    this.GmailPolicy.GmailApi.getBatchRequest().concat(
-                      GmailApi.apiRequest['users.labels.create'](
-                        { userId: this.GmailPolicy.userId },
-                        { name: labelName }
-                      )
-                    )
-                  );
-                  const label = this.GmailPolicy.GmailApi.executeBatchRequest().pop();
-                  this.GmailPolicy.setLabels({
-                    labels: this.GmailPolicy.getLabels().labels.concat(label)
-                  });
-
-                  labelId = label.id;
+              ...(method.parameters.requestBody.addLabelNames
+                ? {
+                  addLabelIds: method.parameters.requestBody.addLabelNames
+                    .map(labelName => this.GmailPolicy.getLabelId(labelName)),
                 }
-
-                return labelId;
-              }).filter(item => item !== null),
-              "removeLabelIds": parameters.requestBody.removeLabelNames.map(labelName =>
-                this.GmailPolicy.getLabelId(labelName)
-              ).filter(item => item !== null)
+                : {}),
+              ...(method.parameters.requestBody.removeLabelNames
+                ? {
+                  removeLabelIds: method.parameters.requestBody.removeLabelNames
+                    .map(labelName => this.GmailPolicy.getLabelId(labelName))
+                }
+                : {})
             }
           }
         };
-      case 'delete':
-        return {
-          name: 'users.threads.delete'
-        };
-      case 'trash':
-        return {
-          name: 'users.threads.trash'
-        };
       default:
-        return null;
+        return method;
     }
   }
 
@@ -82,16 +88,23 @@ class GmailPolicyUI {
    * @param {number} policy.retentionDays - The number of days to retain threads.
    * @param {Array} [policy.methods=[]] - An array of methods to apply to threads.
    */
-  retention({ labelName, retentionDays, methods = [], expectedLabels = [] }) {
+  retention({ labelName, retentionDays, methods = null, unexpectedLabelNames = null, expectedLabelNames = null }) {
     this.GmailPolicy.retention({
       labelId: this.GmailPolicy.getLabelId(labelName),
       retentionDays: retentionDays,
-      methods: methods.map(uiMethod => this._getMethod(uiMethod)),
-      expectedLabels: expectedLabels.map(labelName => this.GmailPolicy.getLabelId(labelName))
-    }); /** todo  move modify labels features to GmailPolicy.apiMethod() */
+      ...(methods ? { methods: methods.map(method => this.DoMethod(method)) } : {}),
+      ...(unexpectedLabelNames
+        ? { unexpectedLabelIds: expectedLabelNames.map(labelName => this.GmailPolicy.getLabelId(labelName)) }
+        : {}
+      ),
+      ...(expectedLabelNames
+        ? { expectedLabelIds: expectedLabelNames.map(labelName => this.GmailPolicy.getLabelId(labelName)) }
+        : {}
+      )
+    });
   }
 
-  patchLabelByRootLabel({ labelName, requestBody }) {
+  patchLabelByRootLabelName({ labelName, requestBody }) {
     this.GmailPolicy.patchLabelByRootLabel({
       labelId: this.GmailPolicy.getLabelId(labelName),
       requestBody: requestBody
