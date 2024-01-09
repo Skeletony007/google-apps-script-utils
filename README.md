@@ -21,6 +21,25 @@ clasp push -f
 
 Place the `Config.gs` as the final [execution order](https://github.com/google/clasp/issues/72) file.
 
+We define a function with time-based triggers to run the GmailPolicyUI instance.
+Visit https://script.google.com/home/triggers to set triggers.
+Since policies effect emails in day units, it is recommended to a the trigger to run daily.
+
+Example config: using an anonymous function to speed up the policy execution
+
+```javascript
+// the initialQuery parameter is optional and we will use it to only fetch
+// threads from the last 28 days.
+ui = new GmailPolicyUI({
+  initialQuery: (() => {
+    const dateWithinDays = new Date();
+    dateWithinDays.setDate(dateWithinDays.getDate() - 28);
+    // format dd/mm/yyyy
+    return `after:${dateWithinDays.getDate()}/${dateWithinDays.getMonth() + 1}/${dateWithinDays.getFullYear()}`
+  })()
+});
+```
+
 ### Q&A
 
 **Q: Why use [tanaikech/BatchRequest](https://github.com/tanaikech/BatchRequest) over [Google JavaScript client library batching](https://github.com/google/google-api-javascript-client/blob/master/docs/batch.md)?**

@@ -1,58 +1,89 @@
 /**
- * Retention policy class.
+ * Gmail policy class.
  *
- * @class
+ * Controls retention policies with minimal side effects.
  */
 class GmailPolicy extends GmailUtil {
-  constructor(userId = 'me') {
-    super(userId);
-  }
+    constructor(userId = 'me') {
+        super(userId);
+    }
 
-  retention({ labelId, retentionDays, methods = [], unexpectedLabelIds = null, expectedLabelIds = null }) {
-    const retentionDate = new Date();
-    retentionDate.setDate(retentionDate.getDate() - retentionDays);
-    this.GmailApi.setBatchRequest(
-      this.getThreadsByRootLabel(labelId)
-        .filter(thread =>
-          new Date(parseInt(thread.messages.pop().internalDate)) < retentionDate &&
-          (unexpectedLabelIds
-            ? !thread.messages.some(message => message.labelIds.some(labelId => unexpectedLabelIds.includes(labelId)))
-            : true
-          ) &&
-          (expectedLabelIds
-            ? thread.messages.every(message => message.labelIds.every(labelId => expectedLabelIds.includes(labelId)))
-            : true
-          )
-        )
-        .flatMap(thread => methods.map(method => GmailApi.getRequest({
-          ...method,
-          parameters: {
-            ...method.parameters,
-            pathParameters: { userId: this.userId, id: thread.id }
-          }
-        })))
-    );
-  }
+    /**
+     * Retention method.
+     *
+     */
+    retention({
+        labelName,
+        retentionDays,
+        methods = [],
+        unexpectedLabelIds = null,
+        expectedLabelIds = null,
+    }) {
+        const retentionDate = new Date();
+        retentionDate.setDate(retentionDate.getDate() - retentionDays);
+        this.GmailApi.setBatchRequest([
+            ...this.GmailApi.getBatchRequest(),
+            ...this.threads
+                .getThreadsByRootLabel(this.labels.getLabelByName(labelName))
+                .filter(thread =>
+                    thread.messages
+                        .getLatestMessage()
+                        .getInternalDate() < retentionDate &&
+                    (unexpectedLabelIds
+                        ? !thread.messages.getMessages()
+                            .some(message =>
+                                message.getLabelIds()
+                                    .some(labelId => unexpectedLabelIds.includes(labelId))
+                            )
+                        : true
+                    ) &&
+                    (expectedLabelIds
+                        ? thread.messages.getMessages()
+                            .every(message =>
+                                message.getLabelIds()
+                                    .every(labelId => expectedLabelIds.includes(labelId))
+                            )
+                        : true
+                    )
+                )
+                .flatMap(thread =>
+                    methods.map(method =>
+                        GmailApi.getRequest({
+                            ...method,
+                            parameters: {
+                                ...method.parameters,
+                                pathParameters: { userId: this.userId, id: thread.id }
+                            },
+                        })
+                    )
+                ),
+        ]);
+    }
 
-  /**
-   * Patch labels by root label.
-   * 
-   * - Inclusive of the root label
-   */
-  patchLabelByRootLabel({ labelId, requestBody }) {
-    const rootLabelName = this.getLabelName(labelId);
-    this.GmailApi.setBatchRequest(this.GmailApi.getBatchRequest()
-      .concat(...this.getLabels().labels
-        .filter(label =>
-          label.name === rootLabelName || label.name.startsWith(`${rootLabelName}/`)
-        ).map(label => GmailApi.getRequest({
-          name: 'users.labels.patch',
-          parameters: {
-            pathParameters: { userId: this.userId, id: label.id },
-            requestBody: requestBody
-          }
-        }))
-      )
-    );
-  }
+    patchLabelByName({ labelName, requestBody }) {
+        this.GmailApi.setBatchRequest([
+            ...this.GmailApi.getBatchRequest(),
+            GmailApi.getRequest({
+                name: 'users.labels.patch',
+                parameters: {
+                    pathParameters: {
+                        userId: this.userId,
+                        id: this.labels.getLabelByName(labelName).getId(),
+                    },
+                    requestBody: requestBody,
+                },
+            }),
+        ]);
+    }
+
+    patchLabelsByRootLabelName({ labelName, requestBody }) {
+        this.labels
+            .getLabelsByRootLabel(this.labels.getLabelByName(labelName))
+            .forEach(label =>
+                this.patchLabelByName({
+                    labelName: label.getName(),
+                    requestBody: requestBody,
+                })
+            );
+    }
 }
