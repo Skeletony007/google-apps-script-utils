@@ -49,7 +49,7 @@ A: The Google Apps Script compiler does not seem to support the [setup](https://
 
 **Q: Why map `users.threads.get` over `users.threads.list`?**
 
-A: `users.threads.get` does not return `message.internalDate`, `users.threads.get` does. See [message resource](https://developers.google.com/gmail/api/reference/rest/v1/users.messages#resource:-message)
+A: `users.threads.list` does not return `message.internalDate`, `users.threads.get` does. See [message resource](https://developers.google.com/gmail/api/reference/rest/v1/users.messages#resource:-message)
 
 [clasp]: https://github.com/google/clasp
 [Apps Script]: https://developers.google.com/apps-script/
