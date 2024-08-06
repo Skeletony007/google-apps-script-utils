@@ -1,7 +1,7 @@
 /**
- * A lazy interface for the Gmail RESTful API.
  *
  * @class
+ * @classdesc A lazy interface for the Gmail RESTful API.
  */
 class GmailUtil {
   /**
@@ -96,8 +96,8 @@ class Messages {
   }
 
   getLatestMessage() {
-    return this.getMessages().reduce((accumulator, message) =>
-      accumulator.getInternalDate() > message.getInternalDate() ? accumulator : message
+    return this.getMessages().reduce((acc, message) =>
+      acc.getInternalDate() > message.getInternalDate() ? acc : message
     );
   }
 }

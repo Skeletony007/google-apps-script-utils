@@ -52,8 +52,7 @@ class GoogleApi {
     }
 
     console.info(
-      JSON,
-      stringify({
+      JSON.stringify({
         batchRequest: {
           request: this.getBatchRequest(),
           response: res,
